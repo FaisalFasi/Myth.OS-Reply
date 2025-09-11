@@ -10,10 +10,6 @@ const isTwitterOAuthDemoMode = () => {
   // Check if we have OAuth 1.0a credentials (for Twitter API v1.1)
   const hasTwitterOAuthCredentials = process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET
   
-  // TEMPORARY: Force demo mode until callback URL is configured
-  console.log('Twitter OAuth demo mode: Forcing demo mode for testing')
-  return true
-  
   // Use demo mode if:
   // 1. We don't have OAuth credentials OR
   // 2. Demo mode is explicitly enabled
@@ -89,6 +85,8 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
     const callbackUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/twitter/oauth/callback`
+    
+    console.log('Using callback URL:', callbackUrl)
     
     const { authUrl, state } = await TwitterOAuthService.getAuthorizationUrl(user.id, callbackUrl)
     
