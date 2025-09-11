@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import QRCodeLib from 'qrcode'
 
 interface QRCodeProps {
   text: string
@@ -10,92 +11,53 @@ interface QRCodeProps {
 
 export default function QRCode({ text, size = 200, className = '' }: QRCodeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!canvasRef.current || !text) return
 
     const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
 
-    // Clear canvas
-    ctx.clearRect(0, 0, size, size)
-
-    // Simple QR code-like pattern generation
-    // In a real implementation, you'd use a QR code library like qrcode.js
-    const cellSize = size / 25 // 25x25 grid
-    const margin = cellSize * 2
-
-    // Draw background
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, size, size)
-
-    // Draw border
-    ctx.strokeStyle = '#000000'
-    ctx.lineWidth = 2
-    ctx.strokeRect(margin, margin, size - margin * 2, size - margin * 2)
-
-    // Draw corner squares (QR code characteristic)
-    const cornerSize = cellSize * 7
-    ctx.fillStyle = '#000000'
-    
-    // Top-left corner
-    ctx.fillRect(margin, margin, cornerSize, cornerSize)
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(margin + cellSize, margin + cellSize, cornerSize - cellSize * 2, cornerSize - cellSize * 2)
-    ctx.fillStyle = '#000000'
-    ctx.fillRect(margin + cellSize * 2, margin + cellSize * 2, cornerSize - cellSize * 4, cornerSize - cellSize * 4)
-
-    // Top-right corner
-    ctx.fillStyle = '#000000'
-    ctx.fillRect(size - margin - cornerSize, margin, cornerSize, cornerSize)
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(size - margin - cornerSize + cellSize, margin + cellSize, cornerSize - cellSize * 2, cornerSize - cellSize * 2)
-    ctx.fillStyle = '#000000'
-    ctx.fillRect(size - margin - cornerSize + cellSize * 2, margin + cellSize * 2, cornerSize - cellSize * 4, cornerSize - cellSize * 4)
-
-    // Bottom-left corner
-    ctx.fillStyle = '#000000'
-    ctx.fillRect(margin, size - margin - cornerSize, cornerSize, cornerSize)
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(margin + cellSize, size - margin - cornerSize + cellSize, cornerSize - cellSize * 2, cornerSize - cellSize * 2)
-    ctx.fillStyle = '#000000'
-    ctx.fillRect(margin + cellSize * 2, size - margin - cornerSize + cellSize * 2, cornerSize - cellSize * 4, cornerSize - cellSize * 4)
-
-    // Draw data pattern (simplified)
-    ctx.fillStyle = '#000000'
-    for (let i = 0; i < 25; i++) {
-      for (let j = 0; j < 25; j++) {
-        if (i > 2 && i < 22 && j > 2 && j < 22) {
-          // Skip corner areas
-          if ((i < 9 && j < 9) || (i < 9 && j > 15) || (i > 15 && j < 9)) {
-            continue
-          }
-          
-          // Random pattern based on text hash
-          const hash = text.charCodeAt(i % text.length) + text.charCodeAt(j % text.length)
-          if (hash % 3 === 0) {
-            ctx.fillRect(margin + i * cellSize, margin + j * cellSize, cellSize, cellSize)
-          }
-        }
-      }
-    }
-
-    // Add text below QR code
-    ctx.fillStyle = '#000000'
-    ctx.font = '12px Arial'
-    ctx.textAlign = 'center'
-    ctx.fillText('Scan with Theta Wallet', size / 2, size + 20)
+    // Generate QR code using the qrcode library
+    QRCodeLib.toCanvas(canvas, text, {
+      width: size,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      },
+      errorCorrectionLevel: 'M'
+    }).catch((err) => {
+      console.error('Error generating QR code:', err)
+      setError('Failed to generate QR code')
+    })
   }, [text, size])
+
+  if (error) {
+    return (
+      <div className={`flex flex-col items-center ${className}`}>
+        <div className="w-48 h-48 bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center">
+          <div className="text-center text-gray-500">
+            <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <p className="text-sm">{error}</p>
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">Scan with Theta Wallet</p>
+      </div>
+    )
+  }
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
       <canvas
         ref={canvasRef}
         width={size}
-        height={size + 30}
-        className="border border-gray-200 rounded-lg"
+        height={size}
+        className="border border-gray-200 rounded-lg shadow-sm"
       />
+      <p className="text-xs text-gray-500 mt-2">Scan with Theta Wallet</p>
     </div>
   )
 }

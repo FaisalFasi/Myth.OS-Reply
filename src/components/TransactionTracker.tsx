@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { toast } from 'react-hot-toast'
 
 interface TransactionStatus {
   status: 'pending' | 'confirmed' | 'failed' | 'expired'
@@ -30,13 +31,32 @@ export default function TransactionTracker({ paymentAddress, onStatusChange }: T
 
       if (response.ok) {
         const data = await response.json()
+        const previousStatus = status.status
         setStatus(data)
         onStatusChange?.(data)
+
+        // Show notifications for status changes
+        if (previousStatus !== data.status) {
+          switch (data.status) {
+            case 'confirmed':
+              toast.success('🎉 Payment confirmed! Your subscription has been activated.')
+              break
+            case 'failed':
+              toast.error('❌ Payment failed. Please try again or contact support.')
+              break
+            case 'expired':
+              toast.error('⏰ Payment address expired. Please generate a new one.')
+              break
+            case 'pending':
+              toast.loading('⏳ Payment pending... Waiting for confirmation.', { duration: 3000 })
+              break
+          }
+        }
       }
     } catch (error) {
       console.error('Error checking transaction status:', error)
     }
-  }, [paymentAddress, onStatusChange])
+  }, [paymentAddress, onStatusChange, status.status])
 
   useEffect(() => {
     if (autoRefresh) {
@@ -47,7 +67,7 @@ export default function TransactionTracker({ paymentAddress, onStatusChange }: T
 
   const verifyTransactionManually = async () => {
     if (!manualHash.trim()) {
-      alert('Please enter a transaction hash')
+      toast.error('Please enter a transaction hash')
       return
     }
 
@@ -71,13 +91,14 @@ export default function TransactionTracker({ paymentAddress, onStatusChange }: T
         setStatus(data)
         onStatusChange?.(data)
         setManualHash('')
+        toast.success('✅ Transaction verified successfully!')
       } else {
         const error = await response.json()
-        alert(`Verification failed: ${error.error}`)
+        toast.error(`Verification failed: ${error.error}`)
       }
     } catch (error) {
       console.error('Error verifying transaction:', error)
-      alert('Error verifying transaction')
+      toast.error('Error verifying transaction')
     } finally {
       setVerifying(false)
     }

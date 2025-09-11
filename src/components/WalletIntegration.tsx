@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toast } from 'react-hot-toast'
 
 interface WalletInfo {
   address: string
@@ -56,7 +57,7 @@ export default function WalletIntegration({ paymentAddress, amount, onTransactio
 
   const connectWallet = async () => {
     if (typeof window === 'undefined' || !window.ethereum) {
-      setError('MetaMask is not installed. Please install MetaMask to continue.')
+      toast.error('MetaMask is not installed. Please install MetaMask to continue.')
       return
     }
 
@@ -81,13 +82,17 @@ export default function WalletIntegration({ paymentAddress, amount, onTransactio
           connected: true
         })
 
+        toast.success('✅ Wallet connected successfully!')
+
         // Switch to Theta Testnet if not already connected
         if (network !== '0x169') {
           await switchToThetaTestnet()
         }
       }
     } catch (error: any) {
-      setError(error.message || 'Failed to connect wallet')
+      const errorMessage = error.message || 'Failed to connect wallet'
+      setError(errorMessage)
+      toast.error(`❌ ${errorMessage}`)
     } finally {
       setConnecting(false)
     }
@@ -133,17 +138,19 @@ export default function WalletIntegration({ paymentAddress, amount, onTransactio
 
   const sendTransaction = async () => {
     if (!wallet.connected) {
-      setError('Please connect your wallet first')
+      toast.error('Please connect your wallet first')
       return
     }
 
     if (!window.ethereum) {
-      setError('MetaMask is not installed')
+      toast.error('MetaMask is not installed')
       return
     }
 
     if (parseFloat(wallet.balance) < amount) {
-      setError(`Insufficient balance. You need ${amount} THETA but have ${wallet.balance} THETA`)
+      const errorMessage = `Insufficient balance. You need ${amount} THETA but have ${wallet.balance} THETA`
+      setError(errorMessage)
+      toast.error(`❌ ${errorMessage}`)
       return
     }
 
@@ -151,6 +158,8 @@ export default function WalletIntegration({ paymentAddress, amount, onTransactio
     setError('')
 
     try {
+      toast.loading('🔄 Sending transaction...', { duration: 5000 })
+      
       const txHash = await window.ethereum.request({
         method: 'eth_sendTransaction',
         params: [{
@@ -163,9 +172,12 @@ export default function WalletIntegration({ paymentAddress, amount, onTransactio
       })
 
       onTransactionSent?.(txHash)
+      toast.success('✅ Transaction sent successfully! Waiting for confirmation...')
       setError('')
     } catch (error: any) {
-      setError(error.message || 'Transaction failed')
+      const errorMessage = error.message || 'Transaction failed'
+      setError(errorMessage)
+      toast.error(`❌ ${errorMessage}`)
     } finally {
       setSending(false)
     }

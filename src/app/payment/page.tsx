@@ -589,6 +589,127 @@ export default function PaymentPlansPage() {
         </div>
       )}
 
+      {/* Payment Address Display */}
+      {paymentAddress && selectedPlan && (
+        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+              Complete Your Payment
+            </h2>
+            <p className="text-gray-600">
+              Send <span className="font-bold text-blue-600">{paymentAddress.amount} THETA</span> to activate your {paymentAddress.plan} plan
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* QR Code Section */}
+            <div className="flex flex-col items-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Scan QR Code</h3>
+              <QRCode 
+                text={`theta:${paymentAddress.address}?amount=${paymentAddress.amount}`}
+                size={250}
+                className="mb-4"
+              />
+              <p className="text-sm text-gray-600 text-center max-w-xs">
+                Scan this QR code with your Theta wallet to send the payment automatically
+              </p>
+            </div>
+
+            {/* Payment Details Section */}
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Details</h3>
+                
+                {/* Payment Address */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Payment Address
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={paymentAddress.address}
+                      readOnly
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm font-mono"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(paymentAddress.address)
+                        alert('Address copied to clipboard!')
+                      }}
+                      className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                      title="Copy address"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Payment Amount */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Amount to Send
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={`${paymentAddress.amount} THETA`}
+                      readOnly
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm font-semibold"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(paymentAddress.amount.toString())
+                        alert('Amount copied to clipboard!')
+                      }}
+                      className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                      title="Copy amount"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Network Information */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-2">Network Information</h4>
+                  <div className="space-y-1 text-sm text-blue-800">
+                    <div className="flex justify-between">
+                      <span>Network:</span>
+                      <span className="font-semibold">Theta Testnet</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Chain ID:</span>
+                      <span className="font-mono">361</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>RPC URL:</span>
+                      <span className="font-mono text-xs">eth-rpc-api-testnet.thetatoken.org</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Instructions */}
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-yellow-900 mb-2">Payment Instructions</h4>
+                  <ul className="text-sm text-yellow-800 space-y-1">
+                    <li>• Make sure you're connected to Theta Testnet</li>
+                    <li>• Send exactly {paymentAddress.amount} THETA to the address above</li>
+                    <li>• Payment will be confirmed automatically within 2-3 minutes</li>
+                    <li>• Keep this page open until payment is confirmed</li>
+                    <li>• Contact support if payment takes longer than 10 minutes</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Transaction Tracker */}
       {paymentAddress && (
         <TransactionTracker
