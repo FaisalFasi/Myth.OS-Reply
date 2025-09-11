@@ -10,6 +10,10 @@ const isTwitterOAuthDemoMode = () => {
   // Check if we have OAuth 1.0a credentials (for Twitter API v1.1)
   const hasTwitterOAuthCredentials = process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET
   
+  // TEMPORARY: Force demo mode until callback URL is configured
+  console.log('Twitter OAuth demo mode: Forcing demo mode until callback URL is configured')
+  return true
+  
   // Use demo mode if:
   // 1. We don't have OAuth credentials OR
   // 2. Demo mode is explicitly enabled
@@ -84,9 +88,21 @@ async function getAuthUser(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
-    const callbackUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/twitter/oauth/callback`
+    // Try different callback URLs that might be approved
+    const possibleCallbackUrls = [
+      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/twitter/oauth/callback`,
+      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/callback/twitter`,
+      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/callback`,
+      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/callback`,
+      'http://localhost:3000/api/twitter/oauth/callback',
+      'http://localhost:3000/api/auth/callback/twitter',
+      'http://localhost:3000/api/callback',
+      'http://localhost:3000/callback'
+    ]
     
+    const callbackUrl = possibleCallbackUrls[0] // Start with the first one
     console.log('Using callback URL:', callbackUrl)
+    console.log('Alternative callback URLs available:', possibleCallbackUrls.slice(1))
     
     const { authUrl, state } = await TwitterOAuthService.getAuthorizationUrl(user.id, callbackUrl)
     
