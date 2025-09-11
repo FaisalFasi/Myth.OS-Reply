@@ -5,20 +5,23 @@ import crypto from 'crypto'
 // Check if demo mode is enabled for Twitter OAuth specifically
 // We want to use real Twitter OAuth even in demo mode for authentication
 const isTwitterOAuthDemoMode = () => {
-  // Check if we have OAuth credentials
-  const hasTwitterOAuthCredentials = process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET
+  // Check if we have OAuth 1.0a credentials (for Twitter API v1.1)
+  const hasTwitterOAuthCredentials = process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET
   
   // Use demo mode if:
   // 1. We don't have OAuth credentials OR
   // 2. Demo mode is explicitly enabled
   if (!hasTwitterOAuthCredentials) {
+    console.log('Twitter OAuth demo mode: No API credentials found')
     return true // No credentials, use demo mode
   }
   
   if (process.env.TWITTER_OAUTH_DEMO_MODE === 'true') {
+    console.log('Twitter OAuth demo mode: Explicitly enabled')
     return true // Demo mode explicitly enabled
   }
   
+  console.log('Twitter OAuth demo mode: Using real OAuth with credentials')
   return false // We have credentials and demo mode is not enabled, use real OAuth
 }
 
@@ -80,8 +83,22 @@ export class TwitterOAuthService {
       }
     }
 
-    const apiKey = process.env.TWITTER_API_KEY!
-    const apiSecret = process.env.TWITTER_API_SECRET!
+    const apiKey = process.env.TWITTER_API_KEY
+    const apiSecret = process.env.TWITTER_API_SECRET
+    
+    if (!apiKey || !apiSecret) {
+      console.error('Twitter OAuth credentials not found:', {
+        TWITTER_API_KEY: !!apiKey,
+        TWITTER_API_SECRET: !!apiSecret
+      })
+      throw new Error('Twitter OAuth credentials not configured. Please set TWITTER_API_KEY and TWITTER_API_SECRET environment variables.')
+    }
+    
+    console.log('Attempting Twitter OAuth with credentials:', {
+      apiKey: apiKey.substring(0, 8) + '...',
+      apiSecret: apiSecret.substring(0, 8) + '...',
+      callbackUrl
+    })
     
     const requestTokenData = await TwitterService.getRequestToken(
       apiKey, 

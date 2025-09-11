@@ -356,7 +356,13 @@ export class TwitterService {
         oauth_callback_confirmed: params.get('oauth_callback_confirmed')
       }
     } catch (error: any) {
-      throw new Error(`Failed to get request token: ${error.response?.data || error.message}`)
+      console.error('Twitter OAuth request token error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText
+      })
+      throw new Error(`Failed to get request token: ${JSON.stringify(error.response?.data || error.message)}`)
     }
   }
 

@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic'
 
 // Check if demo mode is enabled for Twitter OAuth specifically
 const isTwitterOAuthDemoMode = () => {
-  // Check if we have OAuth credentials
-  const hasTwitterOAuthCredentials = process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET
+  // Check if we have OAuth 1.0a credentials (for Twitter API v1.1)
+  const hasTwitterOAuthCredentials = process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET
   
   // Use demo mode if:
   // 1. We don't have OAuth credentials OR
