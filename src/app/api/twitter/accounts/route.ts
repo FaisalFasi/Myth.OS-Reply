@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/database'
 import { AuthService } from '@/lib/services/auth'
-// Removed prisma and TwitterService imports - using demo mode only
 
 export const dynamic = 'force-dynamic'
 
@@ -93,10 +93,29 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
 
-    // Return demo Twitter accounts
-    return NextResponse.json(DEMO_TWITTER_ACCOUNTS)
+    // In demo mode, return demo accounts
+    if (process.env.DEMO_MODE === 'true') {
+      return NextResponse.json(DEMO_TWITTER_ACCOUNTS)
+    }
+
+    // Get real Twitter accounts from database
+    const accounts = await prisma.twitterAccount.findMany({
+      where: {
+        userId: user.id,
+        isActive: true
+      },
+      select: {
+        id: true,
+        twitterUsername: true,
+        isActive: true,
+        createdAt: true
+      }
+    })
+
+    return NextResponse.json(accounts)
     
   } catch (error: any) {
+    console.error('Error fetching Twitter accounts:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

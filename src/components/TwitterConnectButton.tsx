@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { toast } from 'react-hot-toast';
 
 interface TwitterConnectButtonProps {
   callbackUrl?: string;
@@ -119,19 +120,38 @@ export default function TwitterConnectButton({
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch('/api/twitter/accounts', {
-        method: 'DELETE',
+      // First, get the current accounts to find the account ID
+      const accountsResponse = await fetch('/api/twitter/accounts', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
-      if (response.ok) {
-        setIsConnected(false);
-        setTwitterUsername(null);
+      if (accountsResponse.ok) {
+        const accounts = await accountsResponse.json();
+        if (accounts.length > 0) {
+          // Disconnect the first account (or all accounts)
+          for (const account of accounts) {
+            const response = await fetch(`/api/twitter/accounts?id=${account.id}`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+
+            if (response.ok) {
+              console.log(`Disconnected account: ${account.twitterUsername}`);
+            }
+          }
+          
+          setIsConnected(false);
+          setTwitterUsername(null);
+          toast.success('✅ Twitter account disconnected successfully!');
+        }
       }
     } catch (error) {
       console.error('Error disconnecting Twitter:', error);
+      toast.error('❌ Failed to disconnect Twitter account');
     }
   };
 
